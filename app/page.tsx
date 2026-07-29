@@ -37,6 +37,7 @@ type CaseRecord = {
   evidence: string;
   attachments: AttachmentRecord[];
   failureStep?: string;
+  suggestion?: string;
 };
 
 type AttachmentRecord = { name: string; size: number; type: string; lastModified: number; dataUrl?: string };
@@ -162,7 +163,7 @@ function parsePlan(markdown: string): StaffPack[] {
 }
 
 function defaultCaseRecord(): CaseRecord {
-  return { done: false, status: "pending", feedback: "", severity: "", evidence: "", attachments: [], failureStep: "" };
+  return { done: false, status: "pending", feedback: "", severity: "", evidence: "", attachments: [], failureStep: "", suggestion: "" };
 }
 
 function defaultIdeaRecord(): IdeaRecord {
@@ -438,7 +439,7 @@ function Overview({ packs, workspace, overallPercent, done, pass, fail, blocked,
       <section className="hero-panel">
         <div className="hero-copy">
           <p className="eyebrow">PRE-LAUNCH / UAT v1.1</p>
-          <h1>上線前的最後一道<br /><em>共同決策。</em></h1>
+          <h1>上線前的最後一道<br /><em>英雄集結，讓好體驗一起上線。</em></h1>
           <p className="hero-lead">{totalCases} 個驗收案例，交給 6 位熟悉業務的資深同仁。除了找出問題，也把家長與考生每一次卡住、猶豫與靈感，變成下一版的修改方向。</p>
           <div className="hero-actions">
             <button className="primary-button large" onClick={() => onOpenStaff("A")}>開始執行任務</button>
@@ -501,7 +502,7 @@ function Overview({ packs, workspace, overallPercent, done, pass, fail, blocked,
         </article>
         <article className="briefing-card payment">
           <p className="eyebrow">ECPAY SANDBOX</p>
-          <h3>測試卡 4311 · 9522 · 2222 · 2222</h3>
+          <h3>信用卡測試卡號 4311 · 9522 · 2222 · 2222</h3>
           <p>CVV 222｜有效月年需大於當月｜3D 測試碼 1234</p>
           <small>若無法確認為綠界測試環境，立即停止並標記 Blocked。</small>
         </article>
@@ -597,6 +598,8 @@ function CaseCard({ item, record, onChange }: { item: UatCase; record: CaseRecor
         </div>
       </div>
       <div className="case-goal"><strong>【操作目標】</strong><span>{item.goal}</span></div>
+      <details className="case-details">
+        <summary>展開完整操作步驟、預期結果與回報欄位</summary>
       <div className="case-columns">
         <div className="case-instructions"><h3>【操作步驟】</h3><p className="instruction-note"><strong>【執行提醒】</strong><span>請依序完成下列步驟；若中途出現異常，先保留畫面與操作時間，再繼續或標記「阻塞」。</span></p><ol className="step-list">{item.steps.map((step, index) => <li key={index}><span className="step-number">{index + 1}</span><span>{step}</span></li>)}</ol></div>
         <div className="case-expected"><h3>【預期結果】</h3><ul className="expected-list">{item.expected.map((result, index) => <li key={index}><span className="expected-bullet">✓</span><span>{result}</span></li>)}</ul></div>
@@ -608,6 +611,9 @@ function CaseCard({ item, record, onChange }: { item: UatCase; record: CaseRecor
         <label><span>【證據／訂單編號】</span><small className="field-help">請填工程師能用來重現問題的線索：截圖／錄影檔名或連結、訂單編號、付款交易編號、發生時間、瀏覽器與手機型號。沒有訂單請填「未建立訂單」。</small><input value={record.evidence} onChange={(event) => onChange({ evidence: event.target.value })} placeholder="例：A-A05-20260728.png；訂單 #12345；Chrome 1440×900" /></label>
         <label className="attachment-field"><span>【附加截圖／錄影】</span><small className="field-help">可選取本機截圖或錄影作為回報附件；重新選檔會保留既有附件。圖片／PDF 可在工程統籌總表預覽與下載。</small><input type="file" multiple accept="image/*,video/*,.pdf" onChange={async (event) => { const picked = await Promise.all(Array.from(event.target.files ?? []).map(async (file) => ({ name: file.name, size: file.size, type: file.type, lastModified: file.lastModified, dataUrl: await readAttachment(file) }))); onChange({ attachments: [...(record.attachments ?? []), ...picked] }); event.currentTarget.value = ""; }} />{(record.attachments ?? []).length > 0 && <span className="attachment-list">{record.attachments.map((file, index) => <span className="attachment-chip" key={`${file.name}-${file.lastModified}-${index}`}><b>{file.name}</b><button type="button" aria-label={`刪除附件 ${file.name}`} onClick={(event) => { event.preventDefault(); event.stopPropagation(); onChange({ attachments: record.attachments.filter((_, fileIndex) => fileIndex !== index) }); }}>刪除</button></span>)}</span>}</label>
       </div>
+      <label className="suggestion-field"><span>【員工建議／功能回饋】</span><small className="field-help">請分享可改善操作體驗、家長／考生理解度或新增功能的想法。</small><textarea value={record.suggestion ?? ""} onChange={(event) => onChange({ suggestion: event.target.value })} placeholder="例如：建議增加報名進度提示、付款完成通知或常見問題入口……" /></label>
+      <button type="button" className="collapse-case-button" onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")}>收起本題內容 ↑</button>
+      </details>
     </article>
   );
 }
@@ -681,9 +687,9 @@ function EngineerWorkspace({ packs, workspace, setEngineeringRecord }: {
     { value: "closed", label: "已關閉" },
   ];
 
-  const visibleIssues = issues.filter(({ item }) => {
+  const visibleIssues = issues.filter(({ pack, item }) => {
     const record = workspace.engineering?.[`case:${item.id}`] ?? defaultEngineeringRecord();
-    return statusFilter === "all" || record.status === statusFilter;
+    return (staffFilter === "all" || pack.id === staffFilter) && (statusFilter === "all" || record.status === statusFilter) && (matrixResultFilter === "all" || (workspace.cases[item.id]?.status ?? "pending") === matrixResultFilter);
   });
   const visibleProposals = proposals.filter(({ idea }) => {
     const record = workspace.engineering?.[`idea:${idea.id}`] ?? defaultEngineeringRecord();
@@ -717,6 +723,10 @@ function EngineerWorkspace({ packs, workspace, setEngineeringRecord }: {
         </div>
         <div className="engineer-filters"><label className="engineer-filter"><span>工程狀態</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}><option value="all">全部</option>{statusOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label><label className="engineer-filter"><span>測試人員</span><select value={staffFilter} onChange={(event) => setStaffFilter(event.target.value)}><option value="all">全部員工</option>{packs.map((pack) => <option key={pack.id} value={pack.id}>{pack.name}</option>)}</select></label></div>
       </div>
+
+      
+
+      <label className="engineer-filter engineer-result-filter"><span>員工測試結果</span><select value={matrixResultFilter} onChange={(event) => setMatrixResultFilter(event.target.value as CaseStatus | "all")}><option value="all">全部結果</option><option value="pending">未判定</option><option value="pass">通過</option><option value="fail">失敗</option><option value="blocked">阻塞</option></select></label>
 
       {view === "matrix" && <UatMatrix rows={visibleMatrix} resultFilter={matrixResultFilter} setResultFilter={setMatrixResultFilter} engineeringFilter={matrixEngineeringFilter} setEngineeringFilter={setMatrixEngineeringFilter} staffFilter={staffFilter} setStaffFilter={setStaffFilter} packs={packs} />}
 
