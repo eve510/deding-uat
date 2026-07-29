@@ -339,8 +339,8 @@ export default function Home() {
             <i /> 本機自動儲存
           </span>
           <input ref={importRef} className="visually-hidden" type="file" accept="application/json" onChange={importResults} />
-          <button className="ghost-button" onClick={() => importRef.current?.click()}>匯入紀錄</button>
-          <button className="primary-button" onClick={exportResults}>匯出交付檔</button>
+          <button className="ghost-button" onClick={() => importRef.current?.click()}>匯入備份</button>
+          <button className="primary-button" onClick={exportResults}>匯出備份</button>
         </div>
       </header>
 
@@ -370,7 +370,7 @@ export default function Home() {
           })}
           <div className="privacy-note">
             <strong>資料存放位置</strong>
-            <p>輸入內容只存在這台裝置。完成後請匯出 JSON 交給 QA Manager。</p>
+            <p>員工與工程師可直接在此畫面共同處理；資料會自動保存在目前瀏覽器。匯入／匯出僅作備份用途。</p>
           </div>
         </aside>
 
@@ -697,7 +697,7 @@ function EngineerWorkspace({ packs, workspace, setEngineeringRecord }: {
         <div>
           <p className="eyebrow">ENGINEERING CONTROL ROOM</p>
           <h1>工程統籌與修正追蹤</h1>
-          <p>依序匯入員工 A～F 的 JSON 交付檔，系統會合併所有回覆。工程師可確認問題、記錄修改、附上 Commit／PR，並交回複測。</p>
+          <p>所有員工回覆已在此工作台集中呈現。工程師可直接確認問題、記錄修改、附上 Commit／PR，並交回複測，不需要先匯入交付檔。</p>
         </div>
         <div className="engineer-totals"><strong>{issues.length + proposals.length}</strong><span>已收集回覆</span></div>
       </header>
@@ -821,7 +821,7 @@ function EngineeringCard({ trackingId, label, title, reportStatus, severity, fee
 function EngineerEmpty({ type }: { type: string }) {
   return (
     <div className="engineer-empty">
-      <span>⇩</span><h3>尚無{type}</h3><p>請從右上角按「匯入紀錄」，依序選擇員工匯出的 JSON。已有資料時，請調整上方工程狀態篩選。</p>
+      <span>⇩</span><h3>尚無{type}</h3><p>目前沒有符合條件的資料；請調整上方工程狀態／測試人員篩選。工程師可直接在此頁修改回報。</p>
     </div>
   );
 }
@@ -833,7 +833,7 @@ function ExecutionGuide() {
       <article><span className="guide-number">02</span><h3>Fail 要能重現</h3><p>記錄環境、角色、完整步驟、實際與預期結果、發生時間、截圖及訂單編號。</p></article>
       <article><span className="guide-number">03</span><h3>Blocked 不是 Pass</h3><p>環境、帳號、付款或資料不足時標記 Blocked，並清楚寫下解除阻塞所需條件。</p></article>
       <article><span className="guide-number">04</span><h3>測試金流先辨識環境</h3><p>只在 ECPay 測試環境使用 4311-9522-2222-2222／CVV 222／3D 1234。無法辨識環境就停止。</p></article>
-      <article><span className="guide-number">05</span><h3>完成後匯出</h3><p>資料只存在目前瀏覽器。每日收工與全部完成後，都要按「匯出交付檔」交回 QA Manager。</p></article>
+      <article><span className="guide-number">05</span><h3>直接處理與複測</h3><p>工程師直接在「問題回報」編輯狀態、負責人、修正紀錄與 Commit／PR；修改後勾選「QA 複測通過」即可關閉。匯出備份為選用功能。</p></article>
       <article><span className="guide-number">06</span><h3>提出可採用的建議</h3><p>一個問題一張提案，說明受影響角色、預期效益、優先級、難度及如何驗收改善。</p></article>
     </section>
   );
