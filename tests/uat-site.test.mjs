@@ -11,7 +11,7 @@ test("UAT plan contains six distinct task forces and the full case set", async (
   const proposals = markdown.match(/^- \[ \] \*\*[A-F]-I\d{2} /gm) ?? [];
 
   assert.equal(staffSections.length, 6);
-  assert.equal(cases.length, 42);
+  assert.equal(cases.length, 66);
   assert.equal(proposals.length, 18);
   assert.match(markdown, /4311-9522-2222-2222/);
   assert.match(markdown, /3D 驗證碼/);
